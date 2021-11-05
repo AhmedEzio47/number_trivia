@@ -16,18 +16,28 @@ abstract class NumberTriviaLocalDataSource {
   Future<void> cacheNumberTrivia(NumberTriviaModel triviaModelToCache);
 }
 
+const String CACHED_NUMBER_TRIVIA = 'CACHED_NUMBER_TRIVIA';
+
 class NumberTriviaLocalDataSourceImpl implements NumberTriviaLocalDataSource {
   final SharedPreferences sharedPreferences;
 
   NumberTriviaLocalDataSourceImpl({required this.sharedPreferences});
 
   @override
-  Future<void> cacheNumberTrivia(NumberTriviaModel triviaModelToCache) async {}
+  Future<void> cacheNumberTrivia(NumberTriviaModel triviaModelToCache) async {
+    await sharedPreferences.setString(
+      CACHED_NUMBER_TRIVIA,
+      jsonEncode(triviaModelToCache.toJson()),
+    );
+  }
 
   @override
   Future<NumberTriviaModel> getLastNumberTrivia() async {
-    final jsonString = sharedPreferences.getString('CACHED_NUMBER_TRIVIA');
-    return Future.value(
-        NumberTriviaModel.fromJson(jsonDecode(jsonString ?? '')));
+    final jsonString = sharedPreferences.getString(CACHED_NUMBER_TRIVIA);
+    if (jsonString != null) {
+      return Future.value(NumberTriviaModel.fromJson(jsonDecode(jsonString)));
+    } else {
+      throw CacheException();
+    }
   }
 }
