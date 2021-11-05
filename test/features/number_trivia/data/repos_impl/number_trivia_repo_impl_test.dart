@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:number_trivia/core/platform/network_info.dart';
+import 'package:number_trivia/core/network/network_info.dart';
 import 'package:number_trivia/features/number_trivia/data/data_sources/number_trivia_local_data_source.dart';
 import 'package:number_trivia/features/number_trivia/data/data_sources/number_trivia_remote_data_source.dart';
 import 'package:number_trivia/features/number_trivia/data/models/number_trivia_model.dart';
 import 'package:number_trivia/features/number_trivia/data/repos_impl/number_trivia_repo_impl.dart';
+import 'package:number_trivia/features/number_trivia/domain/entities/number_trivia.dart';
 
 class MockRemoteDataSource extends Mock
     implements NumberTriviaRemoteDataSource {
@@ -18,13 +19,9 @@ class MockRemoteDataSource extends Mock
               () => NumberTriviaModel(number: 1, text: 'Test text')));
 
   @override
-  Future<NumberTriviaModel> getRandomNumberTrivia() =>
+  Future<NumberTriviaModel> getRandomNumberTrivia() async =>
       super.noSuchMethod(Invocation.method(#getRandomNumberTrivia, []),
-          returnValue: Future.delayed(
-              Duration(
-                milliseconds: 1,
-              ),
-              () => NumberTriviaModel(number: 1, text: 'Test text')));
+          returnValue: await null);
 }
 
 class MockLocalDataSource extends Mock implements NumberTriviaLocalDataSource {
@@ -38,27 +35,24 @@ class MockLocalDataSource extends Mock implements NumberTriviaLocalDataSource {
               () => NumberTriviaModel(number: 1, text: 'Test text')));
 
   @override
-  Future<void> cacheNumberTrivia(NumberTriviaModel? triviaModelToCache) =>
-      super.noSuchMethod(
-          Invocation.method(#getLastNumberTrivia, [triviaModelToCache]),
-          returnValue: Future.delayed(
-              Duration(
-                milliseconds: 1,
-              ),
-              () {}));
+  Future<void> cacheNumberTrivia(NumberTriviaModel? triviaModelToCache) => super
+      .noSuchMethod(Invocation.method(#cacheNumberTrivia, [triviaModelToCache]),
+          returnValue: true);
 }
 
 class MockNetworkInfo extends Mock implements NetworkInfo {
   @override
   Future<bool> get isConnected =>
-      super.noSuchMethod(Invocation.getter(#uri), returnValue: () => true);
+      super.noSuchMethod(Invocation.getter(#isConnected),
+          returnValue: Future.delayed(Duration(milliseconds: 1), () => true));
 }
 
+late NumberTriviaRepoImpl repo;
+late MockRemoteDataSource mockRemoteDataSource;
+late MockLocalDataSource mockLocalDataSource;
+late MockNetworkInfo mockNetworkInfo;
+
 void main() {
-  NumberTriviaRepoImpl repo;
-  MockRemoteDataSource mockRemoteDataSource;
-  MockLocalDataSource mockLocalDataSource;
-  MockNetworkInfo mockNetworkInfo;
   setUp(() {
     mockRemoteDataSource = MockRemoteDataSource();
     mockLocalDataSource = MockLocalDataSource();
@@ -69,5 +63,48 @@ void main() {
       networkInfo: mockNetworkInfo,
     );
   });
-  test('', () {});
+
+  final tNumber = 1;
+  final NumberTriviaModel tNumberTriviaModel =
+      NumberTriviaModel(text: 'test text', number: tNumber);
+
+  final NumberTrivia tNumberTrivia =
+      NumberTrivia(text: 'test text', number: tNumber);
+
+  group('getConcreteNumberTrivia', () {
+    test('should check if the device is connected to Internet', () async {
+      //arrange
+      when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+      //act
+      await repo.getConcreteNumberTrivia(tNumber);
+      //assert
+      verify(mockNetworkInfo.isConnected);
+    });
+
+    group('device is online', () {
+      setUp(() {
+        when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+      });
+      test('should return remote data', () async {
+        //arrange
+        when(mockRemoteDataSource.getConcreteNumberTrivia(any))
+            .thenAnswer((realInvocation) async => tNumberTriviaModel);
+        //act
+        final result = await repo.getConcreteNumberTrivia(tNumber);
+        //assert
+        verify(mockRemoteDataSource.getConcreteNumberTrivia(tNumber));
+        //expect(result, equals(Right<Failure, NumberTrivia>(tNumberTrivia)));
+      });
+      test('should cache data locally', () async {
+        //arrange
+        when(mockRemoteDataSource.getConcreteNumberTrivia(any))
+            .thenAnswer((realInvocation) async => tNumberTriviaModel);
+        //act
+        await repo.getConcreteNumberTrivia(tNumber);
+        //assert
+        verify(mockRemoteDataSource.getConcreteNumberTrivia(tNumber));
+        verify(mockLocalDataSource.cacheNumberTrivia(tNumberTriviaModel));
+      });
+    });
+  });
 }
