@@ -1,5 +1,8 @@
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:number_trivia/core/errors/failure.dart';
+import 'package:number_trivia/core/usecases/usecase.dart';
 import 'package:number_trivia/core/utils/input_converters.dart';
 import 'package:number_trivia/features/number_trivia/domain/entities/number_trivia.dart';
 import 'package:number_trivia/features/number_trivia/domain/usescases/get_concrete_number_trivia.dart';
@@ -11,26 +14,56 @@ part 'number_trivia_state.dart';
 const String SERVER_ERROR_MESSAGE = 'Server failure';
 const String CACHE_ERROR_MESSAGE = 'Cache failure';
 const String INVALID_INPUT_ERROR_MESSAGE = 'Invalid input';
+const String UNKNOWN_ERROR = 'Unknown error';
 
 class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
-  final GetConcreteNumberTrivia concrete;
-  final GetRandomNumberTrivia random;
+  final GetConcreteNumberTrivia concreteUseCase;
+  final GetRandomNumberTrivia randomUseCase;
   final InputConverter inputConverter;
   NumberTriviaBloc(
-      {required this.concrete,
-      required this.random,
+      {required this.concreteUseCase,
+      required this.randomUseCase,
       required this.inputConverter})
       : super(NumberTriviaInitial()) {
     on<NumberTriviaEvent>((event, emit) async* {
       if (event is GetTriviaForConcreteNumberEvent) {
-        final inputEither =
+        final failureOrInput =
             inputConverter.convertStringToUnsignedInt(event.numberString);
-        yield* inputEither.fold((failure) async* {
-          yield ErrorNumberTriviaState(error: INVALID_INPUT_ERROR_MESSAGE);
+
+        yield* failureOrInput.fold((formatFailure) async* {
+          yield ErrorNumberTriviaState(
+              error: _mapFailureToMessage(formatFailure));
         }, (input) async* {
-          throw UnimplementedError();
+          yield LoadingNumberTriviaState();
+          final failureOrTrivia = await concreteUseCase(Params(number: input));
+          yield* _readyOrErrorState(failureOrTrivia);
         });
-      } else if (event is GetTriviaForRandomNumberEvent) {}
+      } else if (event is GetTriviaForRandomNumberEvent) {
+        yield LoadingNumberTriviaState();
+        final failureOrTrivia = await randomUseCase(NoParams());
+        yield* _readyOrErrorState(failureOrTrivia);
+      }
     });
+  }
+
+  Stream<NumberTriviaState> _readyOrErrorState(
+      Either<Failure, NumberTrivia> failureOrTrivia) async* {
+    yield failureOrTrivia.fold(
+        (failure) =>
+            ErrorNumberTriviaState(error: _mapFailureToMessage(failure)),
+        (trivia) => ReadyNumberTriviaState(trivia: trivia));
+  }
+
+  String _mapFailureToMessage(Failure failure) {
+    switch (failure.runtimeType) {
+      case ServerFailure:
+        return SERVER_ERROR_MESSAGE;
+      case CacheFailure:
+        return CACHE_ERROR_MESSAGE;
+      case InvalidInputFailure:
+        return INVALID_INPUT_ERROR_MESSAGE;
+      default:
+        return UNKNOWN_ERROR;
+    }
   }
 }
