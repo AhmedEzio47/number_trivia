@@ -24,33 +24,35 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
       {required this.concreteUseCase,
       required this.randomUseCase,
       required this.inputConverter})
-      : super(NumberTriviaInitial()) {
-    on<NumberTriviaEvent>((event, emit) async* {
-      if (event is GetTriviaForConcreteNumberEvent) {
-        final failureOrInput =
-            inputConverter.convertStringToUnsignedInt(event.numberString);
+      : super(EmptyNumberTrivia()) {}
 
-        yield* failureOrInput.fold((formatFailure) async* {
-          yield ErrorNumberTriviaState(
-              error: _mapFailureToMessage(formatFailure));
-        }, (input) async* {
-          yield LoadingNumberTriviaState();
-          final failureOrTrivia = await concreteUseCase(Params(number: input));
-          yield* _readyOrErrorState(failureOrTrivia);
-        });
-      } else if (event is GetTriviaForRandomNumberEvent) {
+  @override
+  Stream<NumberTriviaState> mapEventToState(NumberTriviaEvent event) async* {
+    print('here');
+    if (event is GetTriviaForConcreteNumberEvent) {
+      final failureOrInput =
+          inputConverter.convertStringToUnsignedInt(event.numberString);
+
+      yield* failureOrInput.fold((formatFailure) async* {
+        yield ErrorNumberTriviaState(
+            errorMessage: _mapFailureToMessage(formatFailure));
+      }, (input) async* {
         yield LoadingNumberTriviaState();
-        final failureOrTrivia = await randomUseCase(NoParams());
+        final failureOrTrivia = await concreteUseCase(Params(number: input));
         yield* _readyOrErrorState(failureOrTrivia);
-      }
-    });
+      });
+    } else if (event is GetTriviaForRandomNumberEvent) {
+      yield LoadingNumberTriviaState();
+      final failureOrTrivia = await randomUseCase(NoParams());
+      yield* _readyOrErrorState(failureOrTrivia);
+    }
   }
 
   Stream<NumberTriviaState> _readyOrErrorState(
       Either<Failure, NumberTrivia> failureOrTrivia) async* {
     yield failureOrTrivia.fold(
         (failure) =>
-            ErrorNumberTriviaState(error: _mapFailureToMessage(failure)),
+            ErrorNumberTriviaState(errorMessage: _mapFailureToMessage(failure)),
         (trivia) => ReadyNumberTriviaState(trivia: trivia));
   }
 
