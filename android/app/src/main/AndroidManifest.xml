@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.devyat.number_trivia">
+    package="com.devyat.numbertrivia">
    <application
         android:label="number_trivia"
         android:icon="@mipmap/ic_launcher">

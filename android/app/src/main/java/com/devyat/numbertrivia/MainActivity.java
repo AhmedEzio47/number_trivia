@@ -1,4 +1,4 @@
-package com.devyat.number_trivia;
+package com.devyat.numbertrivia;
 
 import io.flutter.embedding.android.FlutterActivity;
 

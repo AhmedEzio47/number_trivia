@@ -11,15 +11,11 @@ import 'package:number_trivia/features/number_trivia/domain/usescases/get_random
 part 'number_trivia_event.dart';
 part 'number_trivia_state.dart';
 
-const String SERVER_ERROR_MESSAGE = 'Server failure';
-const String CACHE_ERROR_MESSAGE = 'Cache failure';
-const String INVALID_INPUT_ERROR_MESSAGE = 'Invalid input';
-const String UNKNOWN_ERROR = 'Unknown error';
-
 class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
   final GetConcreteNumberTrivia concreteUseCase;
   final GetRandomNumberTrivia randomUseCase;
   final InputConverter inputConverter;
+
   NumberTriviaBloc(
       {required this.concreteUseCase,
       required this.randomUseCase,
@@ -28,14 +24,13 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
 
   @override
   Stream<NumberTriviaState> mapEventToState(NumberTriviaEvent event) async* {
-    print('here');
     if (event is GetTriviaForConcreteNumberEvent) {
       final failureOrInput =
           inputConverter.convertStringToUnsignedInt(event.numberString);
 
       yield* failureOrInput.fold((formatFailure) async* {
         yield ErrorNumberTriviaState(
-            errorMessage: _mapFailureToMessage(formatFailure));
+            errorMessage: mapFailureToMessage(formatFailure));
       }, (input) async* {
         yield LoadingNumberTriviaState();
         final failureOrTrivia = await concreteUseCase(Params(number: input));
@@ -52,20 +47,7 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
       Either<Failure, NumberTrivia> failureOrTrivia) async* {
     yield failureOrTrivia.fold(
         (failure) =>
-            ErrorNumberTriviaState(errorMessage: _mapFailureToMessage(failure)),
+            ErrorNumberTriviaState(errorMessage: mapFailureToMessage(failure)),
         (trivia) => ReadyNumberTriviaState(trivia: trivia));
-  }
-
-  String _mapFailureToMessage(Failure failure) {
-    switch (failure.runtimeType) {
-      case ServerFailure:
-        return SERVER_ERROR_MESSAGE;
-      case CacheFailure:
-        return CACHE_ERROR_MESSAGE;
-      case InvalidInputFailure:
-        return INVALID_INPUT_ERROR_MESSAGE;
-      default:
-        return UNKNOWN_ERROR;
-    }
   }
 }

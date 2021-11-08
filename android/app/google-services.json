@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "82505992457",
+    "project_id": "number-trivia-b328d",
+    "storage_bucket": "number-trivia-b328d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82505992457:android:86842145c7e273a4c1abd8",
+        "android_client_info": {
+          "package_name": "com.devyat.numbertrivia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "82505992457-530vq98ltvauu2p2rf75e60oono5h9eg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCWou8BK2Vt5i6OJsNJ8caLpNv8irSROE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82505992457-530vq98ltvauu2p2rf75e60oono5h9eg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
