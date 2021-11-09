@@ -61,6 +61,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           (failure) =>
               ErrorAuthState(errorMessage: mapFailureToMessage(failure)),
           (user) => EmptyAuthState());
+    } else if (event is ResetStateEvent) {
+      yield EmptyAuthState();
     }
   }
 }

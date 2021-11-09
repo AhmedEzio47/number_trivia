@@ -44,12 +44,15 @@ class RegisterPage extends StatelessWidget {
             child: RegisterControls(),
           ),
           InkWell(
-            onTap: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LoginPage(),
-              ),
-            ),
+            onTap: () {
+              BlocProvider.of<AuthBloc>(context).add(ResetStateEvent());
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LoginPage(),
+                ),
+              );
+            },
             child: RichText(
               text: TextSpan(
                   text: 'Already a user?',

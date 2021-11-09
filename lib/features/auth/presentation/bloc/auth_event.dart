@@ -21,3 +21,5 @@ class RegisterEvent extends AuthEvent {
 class FetchUserEvent extends AuthEvent {}
 
 class LogoutUserEvent extends AuthEvent {}
+
+class ResetStateEvent extends AuthEvent {}

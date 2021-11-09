@@ -45,12 +45,15 @@ class LoginPage extends StatelessWidget {
             child: LoginControls(),
           ),
           InkWell(
-            onTap: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => RegisterPage(),
-              ),
-            ),
+            onTap: () {
+              BlocProvider.of<AuthBloc>(context).add(ResetStateEvent());
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RegisterPage(),
+                ),
+              );
+            },
             child: RichText(
               text: TextSpan(
                   text: 'Don\'t have an account?',

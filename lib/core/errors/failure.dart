@@ -27,7 +27,9 @@ class InvalidInputFailure extends Failure {}
 String mapFailureToMessage(Failure failure) {
   switch (failure.runtimeType) {
     case ServerFailure:
-      return CustomErrorMessages.errorMessages[USER_NOT_FOUND] ??
+      print((failure as ServerFailure).errorCode);
+      return CustomErrorMessages
+              .errorMessages[(failure as ServerFailure).errorCode] ??
           SERVER_ERROR_MESSAGE;
     case CacheFailure:
       return CACHE_ERROR_MESSAGE;

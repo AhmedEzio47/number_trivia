@@ -56,6 +56,7 @@ class AuthListTile extends StatelessWidget {
 
   void _authenticate(BuildContext context) {
     Navigator.of(context).pop();
+    BlocProvider.of<AuthBloc>(context).add(ResetStateEvent());
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LoginPage(),

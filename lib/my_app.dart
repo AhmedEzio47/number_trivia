@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
           fetchUseCase: dependency_injector.serviceLocator<FetchUser>(),
           logoutUseCase: dependency_injector.serviceLocator<LogoutUser>()),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Number Trivia',
         theme: ThemeData(
           accentColor: Colors.green.shade600,
